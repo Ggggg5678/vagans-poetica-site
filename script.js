@@ -1,12 +1,14 @@
-/*const concerts = [
+const concerts = [
   {
-    date: "25.09",
-    city: "Ваш город",
-    place: "«Зелёная Дама»",
-    address: "ул. Некрасовская 63",
+    date: "13.11",
+    time: "20:00",
+    city: "Самара",
+    place: "Галактионовская 46",
+    address: "г. Самара",
+    image: "assets/pank.jpg"
   }
 ];
-*/
+
 const showList = document.querySelector("#showList");
 const nav = document.querySelector(".nav");
 const menuToggle = document.querySelector(".menu-toggle");
@@ -14,27 +16,30 @@ const dialog = document.querySelector(".ticket-dialog");
 const player = document.querySelector(".fake-player");
 const trackName = document.querySelector("#trackName");
 const playerState = document.querySelector("#playerState");
+const singleAudio = new Audio("assets/панки не летают.wav");
 
 function renderConcerts() {
   if (!showList) return;
 
   showList.innerHTML = concerts.map((concert) => `
     <article class="show-item">
-      <div class="show-date">${concert.date}</div>
+      <div class="show-date">${concert.date} · ${concert.time}</div>
       <div>
         <div class="show-city">${concert.city}</div>
         <span class="show-place">${concert.place} · ${concert.address}</span>
       </div>
+      <img class="show-img" src="${concert.image}" alt="${concert.place}">
       <button class="ticket-mini" type="button" data-ticket>БИЛЕТЫ</button>
     </article>
   `).join("");
 }
 
+
 function openTickets() {  
   if (typeof dialog?.showModal === "function") {
     dialog.showModal();
   } else {
-    alert("25.09 · 19:00\\nул. Некрасовская 63\\n«Зелёная Дама»");
+    alert("13.11 · 20:00\\nг. Самара\\nГалактионовская 46\\nВход бесплатный");
   }
 }
 
@@ -74,13 +79,15 @@ document.querySelector("[data-player]")?.addEventListener("click", (event) => {
   const isPlaying = player.classList.toggle("playing");
 
   if (isPlaying) {
-    trackName.textContent = "Vagans Poetica — живьём";
-    playerState.textContent = "демо включено · громкость на максимум";
+    trackName.textContent = "Панки не летают";
+    playerState.textContent = "сингл включен";
     button.innerHTML = "■ Остановить";
+    singleAudio.play().catch(() => {});
   } else {
-    trackName.textContent = "Vagans Poetica — Demo";
+
     playerState.textContent = "готово к шуму";
     button.innerHTML = "▶ Включить демо";
+    singleAudio.pause();
   }
 });
 

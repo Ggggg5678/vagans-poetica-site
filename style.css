@@ -142,16 +142,23 @@ body:before{
 }
 .show-list{display:grid;gap:0}
 .show-item{
-  display:grid;grid-template-columns:85px 1fr auto;align-items:center;gap:18px;
+  display:grid;grid-template-columns:85px 1fr 130px auto;align-items:center;gap:18px;
   padding:18px 0;border-top:1px solid rgba(255,255,255,.16)
 }
 .show-item:last-child{border-bottom:1px solid rgba(255,255,255,.16)}
 .show-date{color:var(--red-bright);font-weight:700}
 .show-city{font-weight:700}
 .show-place{display:block;color:#aaa;font-size:12px;margin-top:4px}
+.show-img{width:120px;height:120px;object-fit:cover;border:1px solid rgba(255,255,255,.35);background:#171717}
 .ticket-mini{padding:8px 10px;border:1px solid var(--red-bright);background:none;color:var(--white);cursor:pointer}
 .ticket-mini:hover{background:var(--red-bright);color:#111}
 .hand-note{font-family:"Permanent Marker",cursive;color:var(--red-bright);transform:rotate(-5deg);margin-top:28px}
+
+/* Обложка сингла в разделе Музыка */
+.music-cover{margin-top:30px;display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:start;padding-top:20px;border-top:1px solid rgba(255,255,255,.16)}
+.music-cover-img{width:140px;height:140px;object-fit:cover;border:1px solid rgba(255,255,255,.35);background:#171717}
+.music-cover-title{font-weight:700}
+.music-cover-type{display:block;color:#aaa;font-size:12px;margin-top:4px}
 .about-panel{background:linear-gradient(135deg,rgba(169,9,18,.07),transparent 55%)}
 .about-panel p{max-width:540px;font-size:15px;line-height:1.9;color:#ddd}
 .quote{
