@@ -51,6 +51,9 @@ function renderTracklist() {
 
 function loadTrack(index) {
   if (index < 0 || index >= tracks.length) return;
+  // Если тот же трек уже загружен — не пересоздаём аудио, чтобы сохранить текущее время
+  if (currentTrackIndex === index && currentAudio) return;
+
   currentTrackIndex = index;
   if (currentAudio) {
     currentAudio.pause();
@@ -67,7 +70,7 @@ function loadTrack(index) {
   renderTracklist();
 
   trackName.textContent = tracks[index].title;
-  playerState.textContent = "готово к шуму";
+  playerState.textContent = "готов к шуму";
   player.classList.remove("playing");
 }
 
@@ -78,13 +81,14 @@ tracklistEl?.addEventListener("click", (event) => {
   const index = Number(trackItem.dataset.track);
   const wasPlaying = player.classList.contains("playing") && currentTrackIndex === index;
 
-  loadTrack(index);
-
   if (wasPlaying) {
+    // Ставим на паузу — позиция сохраняется в текущем аудио-объекте
     player.classList.remove("playing");
     playerState.textContent = "на паузе";
     currentAudio?.pause();
   } else {
+    // Играем другой трек (или продолжаем тот же с места паузы)
+    loadTrack(index);
     currentAudio?.play().catch(() => {});
     player.classList.add("playing");
     trackName.textContent = tracks[currentTrackIndex].title;
