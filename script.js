@@ -44,7 +44,7 @@ function renderTracklist() {
       <span class="track-number">${i + 1}</span>
       <span class="track-title">${track.title}</span>
       <span class="track-duration">--:--</span>
-      <button class="track-play" aria-label="Воспроизвести ${track.title}">▶</button>
+      <button class="track-play" aria-label="${i === currentTrackIndex && player.classList.contains("playing") ? "Остановить" : "Воспроизвести"} ${track.title}">${i === currentTrackIndex && player.classList.contains("playing") ? "■" : "▶"}</button>
     </div>
   `).join("");
 }
@@ -68,39 +68,44 @@ function loadTrack(index) {
 
   trackName.textContent = tracks[index].title;
   playerState.textContent = "готово к шуму";
-  const btn = document.querySelector("[data-player]");
-  if (btn) btn.innerHTML = "▶ Включить трек";
   player.classList.remove("playing");
 }
 
-function playCurrent() {
-  if (!currentAudio) return;
-  const isPlaying = player.classList.toggle("playing");
-  if (isPlaying) {
-    currentAudio.play().catch(() => {});
+// Клик по треку в списке — выбрать и начать/остановить воспроизведение.
+tracklistEl?.addEventListener("click", (event) => {
+  const trackItem = event.target.closest(".track-item");
+  if (!trackItem) return;
+  const index = Number(trackItem.dataset.track);
+  const wasPlaying = player.classList.contains("playing") && currentTrackIndex === index;
+
+  loadTrack(index);
+
+  if (wasPlaying) {
+    player.classList.remove("playing");
+    playerState.textContent = "на паузе";
+    currentAudio?.pause();
+  } else {
+    currentAudio?.play().catch(() => {});
+    player.classList.add("playing");
     trackName.textContent = tracks[currentTrackIndex].title;
     playerState.textContent = "играет";
-    const btn = document.querySelector("[data-player]");
-    if (btn) btn.innerHTML = "■ Остановить";
-  } else {
-    playerState.textContent = "на паузе";
-    const btn = document.querySelector("[data-player]");
-    if (btn) btn.innerHTML = "▶ Включить трек";
-    currentAudio.pause();
   }
   renderTracklist();
-}
+});
 
-function nextTrack() {
-  loadTrack((currentTrackIndex + 1) % tracks.length);
-  playCurrent();
+// Авто-переход на следующий трек когда текущий закончился.
+function setupEndedHandler() {
+  if (currentAudio) {
+    currentAudio.onended = () => {
+      loadTrack((currentTrackIndex + 1) % tracks.length);
+      currentAudio?.play().catch(() => {});
+      player.classList.add("playing");
+      trackName.textContent = tracks[currentTrackIndex].title;
+      playerState.textContent = "играет";
+      renderTracklist();
+    };
+  }
 }
-
-function prevTrack() {
-  loadTrack((currentTrackIndex - 1 + tracks.length) % tracks.length);
-  playCurrent();
-}
-
 function renderConcerts() {
   if (!showList) return;
 
@@ -156,29 +161,6 @@ menuToggle?.addEventListener("click", () => {
   const isOpen = nav.classList.toggle("open");
   menuToggle.setAttribute("aria-expanded", String(isOpen));
 });
-
-document.querySelector("[data-player]")?.addEventListener("click", () => {
-  if (!currentAudio) loadTrack(0);
-  playCurrent();
-});
-
-// Клик по треку в списке — выбрать и начать воспроизведение.
-tracklistEl?.addEventListener("click", (event) => {
-  const trackItem = event.target.closest(".track-item");
-  if (!trackItem) return;
-  const index = Number(trackItem.dataset.track);
-  loadTrack(index);
-  playCurrent();
-});
-
-// Авто-переход на следующий трек когда текущий закончился.
-function setupEndedHandler() {
-  if (currentAudio) {
-    currentAudio.onended = () => {
-      nextTrack();
-    };
-  }
-}
 
 // Небольшой эффект появления элементов при прокрутке.
 const observer = new IntersectionObserver((entries) => {
