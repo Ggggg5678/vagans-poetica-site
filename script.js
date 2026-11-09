@@ -30,6 +30,8 @@ const tracks = [
 
 let currentTrackIndex = 0;
 let currentAudio = null;
+let timeInterval = null;
+const trackDurations = {};
 
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60);
@@ -37,22 +39,46 @@ function formatTime(seconds) {
   return `${m}:${s < 10 ? "0" : ""}${s}`;
 }
 
+function startTimeInterval() {
+  if (timeInterval) clearInterval(timeInterval);
+  timeInterval = setInterval(() => renderTracklist(), 1000);
+}
+
+function stopTimeInterval() {
+  if (timeInterval) {
+    clearInterval(timeInterval);
+    timeInterval = null;
+  }
+}
+
 function renderTracklist() {
   if (!tracklistEl) return;
-  tracklistEl.innerHTML = tracks.map((track, i) => `
-    <div class="track-item${i === currentTrackIndex ? " playing" : ""}" data-track="${i}">
-      <span class="track-number">${i + 1}</span>
-      <span class="track-title">${track.title}</span>
-      <span class="track-duration">--:--</span>
-      <button class="track-play" aria-label="${i === currentTrackIndex && player.classList.contains("playing") ? "Остановить" : "Воспроизвести"} ${track.title}">${i === currentTrackIndex && player.classList.contains("playing") ? "■" : "▶"}</button>
-    </div>
-  `).join("");
+  const isPlaying = player.classList.contains("playing");
+  tracklistEl.innerHTML = tracks.map((track, i) => {
+    const duration = trackDurations[i];
+    let timeText = "--:--";
+    if (i === currentTrackIndex && currentAudio) {
+      timeText = formatTime(currentAudio.currentTime);
+    } else if (duration) {
+      timeText = formatTime(duration);
+    }
+    return `
+      <div class="track-item${i === currentTrackIndex ? " playing" : ""}" data-track="${i}">
+        <span class="track-number">${i + 1}</span>
+        <span class="track-title">${track.title}</span>
+        <span class="track-duration">${timeText}</span>
+        <button class="track-play" aria-label="${i === currentTrackIndex && isPlaying ? "Остановить" : "Воспроизвести"} ${track.title}">${i === currentTrackIndex && isPlaying ? "■" : "▶"}</button>
+      </div>
+    `;
+  }).join("");
 }
 
 function loadTrack(index) {
   if (index < 0 || index >= tracks.length) return;
   // Если тот же трек уже загружен — не пересоздаём аудио, чтобы сохранить текущее время
   if (currentTrackIndex === index && currentAudio) return;
+
+  stopTimeInterval();
 
   currentTrackIndex = index;
   if (currentAudio) {
@@ -61,10 +87,8 @@ function loadTrack(index) {
   }
   currentAudio = new Audio(tracks[index].file);
   currentAudio.addEventListener("loadedmetadata", () => {
-    const el = tracklistEl.querySelector(`[data-track="${index}"]`);
-    if (el) {
-      el.querySelector(".track-duration").textContent = formatTime(currentAudio.duration);
-    }
+    trackDurations[index] = currentAudio.duration;
+    renderTracklist();
   });
   setupEndedHandler();
   renderTracklist();
@@ -86,6 +110,7 @@ tracklistEl?.addEventListener("click", (event) => {
     player.classList.remove("playing");
     playerState.textContent = "на паузе";
     currentAudio?.pause();
+    stopTimeInterval();
   } else {
     // Играем другой трек (или продолжаем тот же с места паузы)
     loadTrack(index);
@@ -93,6 +118,7 @@ tracklistEl?.addEventListener("click", (event) => {
     player.classList.add("playing");
     trackName.textContent = tracks[currentTrackIndex].title;
     playerState.textContent = "играет";
+    startTimeInterval();
   }
   renderTracklist();
 });
@@ -101,11 +127,13 @@ tracklistEl?.addEventListener("click", (event) => {
 function setupEndedHandler() {
   if (currentAudio) {
     currentAudio.onended = () => {
+      stopTimeInterval();
       loadTrack((currentTrackIndex + 1) % tracks.length);
       currentAudio?.play().catch(() => {});
       player.classList.add("playing");
       trackName.textContent = tracks[currentTrackIndex].title;
       playerState.textContent = "играет";
+      startTimeInterval();
       renderTracklist();
     };
   }
