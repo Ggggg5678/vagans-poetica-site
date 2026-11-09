@@ -16,7 +16,90 @@ const dialog = document.querySelector(".ticket-dialog");
 const player = document.querySelector(".fake-player");
 const trackName = document.querySelector("#trackName");
 const playerState = document.querySelector("#playerState");
-const singleAudio = new Audio("assets/панки не летают.wav");
+const tracklistEl = document.querySelector("#tracklist");
+
+const tracks = [
+  { title: "Intro", file: "assets/intro.wav" },
+  { title: "Аспирин", file: "assets/аспирин.wav" },
+  { title: "Меняю сюжет", file: "assets/Меняю сюжет.wav" },
+  { title: "Панки не летают", file: "assets/панки не летают.wav" },
+  { title: "Свечи", file: "assets/свечи.wav" },
+  { title: "Тощий человек", file: "assets/тощий челоdек.wav" },
+  { title: "Химик со вкусом", file: "assets/химик со вкусом.wav" }
+];
+
+let currentTrackIndex = 0;
+let currentAudio = null;
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s < 10 ? "0" : ""}${s}`;
+}
+
+function renderTracklist() {
+  if (!tracklistEl) return;
+  tracklistEl.innerHTML = tracks.map((track, i) => `
+    <div class="track-item${i === currentTrackIndex ? " playing" : ""}" data-track="${i}">
+      <span class="track-number">${i + 1}</span>
+      <span class="track-title">${track.title}</span>
+      <span class="track-duration">--:--</span>
+      <button class="track-play" aria-label="Воспроизвести ${track.title}">▶</button>
+    </div>
+  `).join("");
+}
+
+function loadTrack(index) {
+  if (index < 0 || index >= tracks.length) return;
+  currentTrackIndex = index;
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  currentAudio = new Audio(tracks[index].file);
+  currentAudio.addEventListener("loadedmetadata", () => {
+    const el = tracklistEl.querySelector(`[data-track="${index}"]`);
+    if (el) {
+      el.querySelector(".track-duration").textContent = formatTime(currentAudio.duration);
+    }
+  });
+  setupEndedHandler();
+  renderTracklist();
+
+  trackName.textContent = tracks[index].title;
+  playerState.textContent = "готово к шуму";
+  const btn = document.querySelector("[data-player]");
+  if (btn) btn.innerHTML = "▶ Включить трек";
+  player.classList.remove("playing");
+}
+
+function playCurrent() {
+  if (!currentAudio) return;
+  const isPlaying = player.classList.toggle("playing");
+  if (isPlaying) {
+    currentAudio.play().catch(() => {});
+    trackName.textContent = tracks[currentTrackIndex].title;
+    playerState.textContent = "играет";
+    const btn = document.querySelector("[data-player]");
+    if (btn) btn.innerHTML = "■ Остановить";
+  } else {
+    playerState.textContent = "на паузе";
+    const btn = document.querySelector("[data-player]");
+    if (btn) btn.innerHTML = "▶ Включить трек";
+    currentAudio.pause();
+  }
+  renderTracklist();
+}
+
+function nextTrack() {
+  loadTrack((currentTrackIndex + 1) % tracks.length);
+  playCurrent();
+}
+
+function prevTrack() {
+  loadTrack((currentTrackIndex - 1 + tracks.length) % tracks.length);
+  playCurrent();
+}
 
 function renderConcerts() {
   if (!showList) return;
@@ -74,22 +157,28 @@ menuToggle?.addEventListener("click", () => {
   menuToggle.setAttribute("aria-expanded", String(isOpen));
 });
 
-document.querySelector("[data-player]")?.addEventListener("click", (event) => {
-  const button = event.currentTarget;
-  const isPlaying = player.classList.toggle("playing");
-
-  if (isPlaying) {
-    trackName.textContent = "Панки не летают";
-    playerState.textContent = "сингл включен";
-    button.innerHTML = "■ Остановить";
-    singleAudio.play().catch(() => {});
-  } else {
-
-    playerState.textContent = "готово к шуму";
-    button.innerHTML = "▶ Включить демо";
-    singleAudio.pause();
-  }
+document.querySelector("[data-player]")?.addEventListener("click", () => {
+  if (!currentAudio) loadTrack(0);
+  playCurrent();
 });
+
+// Клик по треку в списке — выбрать и начать воспроизведение.
+tracklistEl?.addEventListener("click", (event) => {
+  const trackItem = event.target.closest(".track-item");
+  if (!trackItem) return;
+  const index = Number(trackItem.dataset.track);
+  loadTrack(index);
+  playCurrent();
+});
+
+// Авто-переход на следующий трек когда текущий закончился.
+function setupEndedHandler() {
+  if (currentAudio) {
+    currentAudio.onended = () => {
+      nextTrack();
+    };
+  }
+}
 
 // Небольшой эффект появления элементов при прокрутке.
 const observer = new IntersectionObserver((entries) => {
@@ -122,6 +211,8 @@ document.querySelectorAll(".section, .event-strip, .site-footer").forEach((el) =
 });
 
 renderConcerts();
+renderTracklist();
+loadTrack(0);
 
 
 // Вставь сюда настоящую ссылку на страницу пожертвований.
