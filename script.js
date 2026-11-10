@@ -19,13 +19,13 @@ const playerState = document.querySelector("#playerState");
 const tracklistEl = document.querySelector("#tracklist");
 
 const tracks = [
-  { title: "Intro", file: "assets/intro.wav" },
-  { title: "Аспирин", file: "assets/аспирин.wav" },
-  { title: "Меняю сюжет", file: "assets/Меняю сюжет.wav" },
-  { title: "Панки не летают", file: "assets/панки не летают.wav" },
-  { title: "Свечи", file: "assets/свечи.wav" },
-  { title: "Тощий человек", file: "assets/тощий челоdек.wav" },
-  { title: "Химик со вкусом", file: "assets/химик со вкусом.wav" }
+  { title: "Intro", file: "assets/intro.mp3" },
+  { title: "Аспирин", file: "assets/аспирин.mp3" },
+  { title: "Меняю сюжет", file: "assets/Меняю сюжет.mp3" },
+  { title: "Панки не летают", file: "assets/панки не летают.mp3" },
+  { title: "Свечи", file: "assets/свечи.mp3" },
+  { title: "Тощий человек", file: "assets/тощий челоdек.mp3" },
+  { title: "Химик со вкусом", file: "assets/химик со вкусом.mp3" }
 ];
 
 let currentTrackIndex = 0;
