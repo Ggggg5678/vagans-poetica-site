@@ -3,7 +3,7 @@ const concerts = [
     date: "13.11",
     time: "20:00",
     city: "Самара",
-    place: "Рок-бар ""Подвал",
+    place: '"Рок-бар "Подвал"',
     address: "г. Самара Галактионовская 46",
     image: "assets/pank.jpg"
   }
